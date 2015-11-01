@@ -8,6 +8,12 @@ module Ex23 where
     subDrop : ∀ {x xs ys} -> xs ⊆ ys -> xs ⊆ (x ∷ ys)
     subKeep : ∀ {x xs ys} -> xs ⊆ ys -> (x ∷ xs) ⊆ (x ∷ ys)
 
+  lem-filter : {A : Set}(p : A -> Bool)(xs : List A) -> filter p xs ⊆ xs
+  lem-filter p [] = subEmp
+  lem-filter p (x ∷ xs) with p x
+  ... | true = subKeep (lem-filter p xs)
+  ... | false = subDrop (lem-filter p xs)
+
   ⊆-refl : {A : Set}{xs : List A} → xs ⊆ xs
   ⊆-refl {xs = []} = subEmp
   ⊆-refl {xs = (y ∷ ys)} = subKeep ⊆-refl
