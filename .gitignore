@@ -1,2 +1,5 @@
-*.agda~ 
+#This is a comment line
+*~
+[#]*[#]
+.\#*
 *.agdai
