@@ -1,7 +1,7 @@
 module SystemF where
 
 open import Data.Nat
-open import Data.List
+open import Data.List hiding (all ; [_])
 
 -- variable with number as name
 data Var : Set where
@@ -63,6 +63,16 @@ lastVar {vv} {T} {bs} cxtx = vv
 lastTVar : ∀ {tt bs} → Ctxt (tb tt ∷ bs) → TVar
 lastTVar {tt} {bs} cxtx = tt
 
+-- substitution in type
+infix 50 [_↦_]_
+[_↦_]_ : TVar → Type → Type → Type
+[ x ↦ s ] nat = nat
+[ x ↦ s ] (t₁ ⇒ t₂) = [ x ↦ s ] t₁ ⇒ [ x ↦ s ] t₂
+[ (tv n) ↦ s ] tvar (tv m) with compare n m
+[ (tv .n) ↦ s ] tvar (tv .n) | equal n = s
+[ (tv n) ↦ s ] tvar (tv m) | _ = tvar (tv m)
+[ x ↦ s ] (all y ▴ t) = all y ▴ [ x ↦ s ] t 
+
 -- represents typing rules
 data _⊢_:-_ {bs : List Binding} (Γ : Ctxt bs) : RawTerm → Type → Set where
   T-Var : ∀ {v T} → (v :- T) ∈ bs → 
@@ -73,4 +83,5 @@ data _⊢_:-_ {bs : List Binding} (Γ : Ctxt bs) : RawTerm → Type → Set wher
           Γ ⊢ (t₁ $ t₂) :- T₂
   T-TAbs : ∀ {t₁ T₁} → Γ ,X ⊢ t₁ :- T₁ → 
            Γ ⊢ tlam (lastTVar (Γ ,X)) ▴ t₁ :- (all (lastTVar (Γ ,X)) ▴ T₁)
-
+  T-TApp : ∀ {t X T S} → Γ ⊢ t :- (all X ▴ T) → 
+           Γ ⊢ t [ S ] :- [ X ↦ S ] T
