@@ -23,6 +23,8 @@ data Type : Set where
   ALL_▴_ : TVar → Type → Type
 
 -- term construction rules
+infixl 50 lam_:-_▴_ tlam_▴_
+infixr 40 _$_ _[_]
 data RawTerm : Set where
   var : Var → RawTerm
   lam_:-_▴_ : Var → Type → RawTerm → RawTerm

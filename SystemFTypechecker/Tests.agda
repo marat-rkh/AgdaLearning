@@ -16,12 +16,20 @@ ctxt? (b ∷ bs) | just Γ | just fp = just (Γ , b [ fp ])
 ctxt? (b ∷ bs) | just Γ | _ = nothing
 ctxt? (b ∷ bs) | _ = nothing
 
-typecheck : (bs : List Binding) → (rt : RawTerm) → String
+getType : ∀ {t T bs} → {Γ : Ctxt bs} → (Γ ⊢ t :- T) → Type
+getType {_} {T} {_} {_} _ = T
+
+data TypecheckRes : Set where
+  incorrectCtxt : TypecheckRes
+  hasType_withDerivationTree_ : ∀ {t bs} → {Γ : Ctxt bs} → (T : Type) → (Γ ⊢ t :- T) → TypecheckRes
+  cannotBeTyped : TypecheckRes
+
+typecheck : (bs : List Binding) → (rt : RawTerm) → TypecheckRes
 typecheck bs rt with ctxt? bs
 typecheck bs rt | just Γ with infer Γ rt
-typecheck bs rt | just Γ | bad = "cannot be typed"
-typecheck bs rt | just Γ | typed p = "type safe"
-typecheck bs rt | nothing = "incorrect context"
+typecheck bs rt | just Γ | typed prf = hasType (getType prf) withDerivationTree prf
+typecheck bs rt | just Γ | bad = cannotBeTyped
+typecheck bs rt | nothing = incorrectCtxt
 
 x = v 0
 y = v 1
@@ -45,8 +53,5 @@ test5 = typecheck ((y :- NAT) ∷ []) (idNat $ (var y))
 
 test6 = typecheck ((y :- NAT) ∷ []) (id [ NAT ] $ (var y))
 
-testSelfApp = typecheck [] (lam x :- (ALL X ▴ TVAR X ⇒ TVAR X) ▴ ((var x [ ALL X ▴ TVAR X ⇒ TVAR X ]) $ var x))
-
--- test7 = typecheck (x :- (ALL X ▴ TVAR X ⇒ TVAR X) ∷ []) (var x [ ALL X ▴ TVAR X ⇒ TVAR X ] $ var x)
-
--- test8 = typecheck [] (lam x :- (ALL X ▴ TVAR X ⇒ TVAR X) ▴ var x [ ALL X ▴ TVAR X ⇒ TVAR X ])
+testSelfApp = typecheck [] (lam x :- A ▴ (var x [ A ] $ var x))
+  where A = ALL X ▴ TVAR X ⇒ TVAR X
