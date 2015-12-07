@@ -6,6 +6,7 @@ open import Data.Nat
 
 open import SystemF
 
+-- converts bindings list to context if possible
 ctxt? : (bs : List Binding) → Maybe (Ctxt bs)
 ctxt? [] = just ∅
 ctxt? (b ∷ bs) with ctxt? bs
@@ -29,6 +30,7 @@ typecheck bs rt | just Γ | typed prf = hasType (getType prf) withDerivationTree
 typecheck bs rt | just Γ | bad = cannotBeTyped
 typecheck bs rt | nothing = incorrectCtxt
 
+-- Tests --
 x = v 0
 y = v 1
 z = v 2
