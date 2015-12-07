@@ -1,6 +1,3 @@
----
-output: html_document
----
 # Typechecking for System F
 
 Given some context and raw annotated term the program computes term's type in the specified context or says that the term cannot be typed in the context.
