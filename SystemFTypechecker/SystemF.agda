@@ -1,9 +1,10 @@
-module SystemF2 where
+module SystemF where
 
 open import Data.Nat
 open import Data.List hiding (all ; [_])
 open import Data.Maybe
 open import Relation.Binary.PropositionalEquality hiding ([_])
+open import Relation.Nullary
 
 -- variable with number as name
 data Var : Set where
@@ -32,15 +33,15 @@ data RawTerm : Set where
 infix 50 _:-_
 data Binding : Set where
   _:-_ : Var → Type → Binding
-  tb : TVar → Binding
+  tb : TVar → Binding 
 
-getNum : Binding → ℕ
-getNum (v n :- _) = n
-getNum (tb (tv n)) = n
+getName : Binding → ℕ
+getName (v n :- _) = n
+getName (tb (tv n)) = n
 
 data IsFresh : Binding → List Binding → Set where
   ∅-fresh : ∀ {b} → IsFresh b []
-  hd-fresh : ∀ {a b bs} → (getNum a) > (getNum b) → IsFresh a (b ∷ bs)
+  hd-fresh : ∀ {a b bs} → ¬ (getName a ≡ getName b) → IsFresh a bs → IsFresh a (b ∷ bs)
 
 -- context construction rules
 data Ctxt : List Binding → Set where
@@ -101,21 +102,11 @@ data TypeInfo {bs} (Γ : Ctxt bs) : RawTerm → Set where
   typed : ∀ {t T} → (prop : Γ ⊢ t :- T) → TypeInfo Γ t
   bad : {rt : RawTerm} -> TypeInfo Γ rt
 
-isLeq : ∀ n m → Maybe (n ≤ m)
-isLeq zero (suc m) = just z≤n
-isLeq (suc n) (suc m) with isLeq n m
-... | just prf = just (s≤s prf)
-... | _ = nothing
-isLeq _ _ = nothing
-
-isGt : ∀ n m → Maybe (n > m)
-isGt n m = isLeq (suc m) n
-
 isFresh : ∀ {bs} → (b : Binding) → (Γ : Ctxt bs) → Maybe (IsFresh b bs)
 isFresh {[]} _ _ = just ∅-fresh
-isFresh {b ∷ bs} a _ with isGt (getNum a) (getNum b)
-... | just prf = just (hd-fresh prf)
-... | _ = nothing
+isFresh a (Δ , b [ _ ]) with getName a ≟ getName b | isFresh a Δ
+... | no prfNeq | just prfFresh = just (hd-fresh prfNeq prfFresh)
+... | _ | _ = nothing
 
 _=?=_ : (T S : Type) -> Maybe (T ≡ S)
 

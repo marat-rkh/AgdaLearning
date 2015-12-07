@@ -1,10 +1,10 @@
 module Tests where
 
-open import Data.List
+open import Data.List hiding ([_])
 open import Data.Maybe
 open import Data.String
 
-open import SystemF2
+open import SystemF
 
 open import Data.Nat
 
@@ -19,29 +19,34 @@ ctxt? (b ∷ bs) | _ = nothing
 typecheck : (bs : List Binding) → (rt : RawTerm) → String
 typecheck bs rt with ctxt? bs
 typecheck bs rt | just Γ with infer Γ rt
-typecheck bs rt | just Γ | bad = "can not be typed"
+typecheck bs rt | just Γ | bad = "cannot be typed"
 typecheck bs rt | just Γ | typed p = "type safe"
 typecheck bs rt | nothing = "incorrect context"
 
-test1 : String
-test1 = typecheck (v 0 :- NAT ∷ []) (var (v 0))
+x = v 0
+y = v 1
+z = v 2
+a = v 3
+b = v 4
+X = tv 5
+Y = tv 6
+idNat = lam x :- NAT ▴ (var x)
+id = tlam X ▴ lam x :- (TVAR X) ▴ (var x)
 
-test2 : String
-test2 = typecheck (tb X ∷ (x :- TVAR X) ∷ []) id
-  where
-    X = tv 2
-    x = v 0   
-    id = tlam X ▴ lam x :- (TVAR X) ▴ (var x)
+test1 = typecheck (x :- NAT ∷ []) (var x)
 
-test3 : String
-test3 = typecheck [] id
-  where
-    x = v 0    
-    id = lam x :- NAT ▴ (var x)
+test2 = typecheck [] id
 
-test4 : String
-test4 = typecheck ((y :- NAT) ∷ []) id
-  where
-    x = v 2    
-    y = v 0
-    id = lam x :- NAT ▴ (var x)
+test3 = typecheck [] idNat
+
+test4 = typecheck ((y :- NAT) ∷ []) idNat
+
+test5 = typecheck ((y :- NAT) ∷ []) (idNat $ (var y))
+
+test6 = typecheck ((y :- NAT) ∷ []) (id [ NAT ] $ (var y))
+
+testSelfApp = typecheck [] (lam x :- (ALL X ▴ TVAR X ⇒ TVAR X) ▴ ((var x [ ALL X ▴ TVAR X ⇒ TVAR X ]) $ var x))
+
+-- test7 = typecheck (x :- (ALL X ▴ TVAR X ⇒ TVAR X) ∷ []) (var x [ ALL X ▴ TVAR X ⇒ TVAR X ] $ var x)
+
+-- test8 = typecheck [] (lam x :- (ALL X ▴ TVAR X ⇒ TVAR X) ▴ var x [ ALL X ▴ TVAR X ⇒ TVAR X ])
