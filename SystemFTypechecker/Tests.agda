@@ -2,11 +2,9 @@ module Tests where
 
 open import Data.List hiding ([_])
 open import Data.Maybe
-open import Data.String
+open import Data.Nat
 
 open import SystemF
-
-open import Data.Nat
 
 ctxt? : (bs : List Binding) → Maybe (Ctxt bs)
 ctxt? [] = just ∅
@@ -38,20 +36,42 @@ a = v 3
 b = v 4
 X = tv 5
 Y = tv 6
-idNat = lam x :- NAT ▴ (var x)
-id = tlam X ▴ lam x :- (TVAR X) ▴ (var x)
+f = v 7
 
 test1 = typecheck (x :- NAT ∷ []) (var x)
 
+id = tlam X ▴ lam x :- (TVAR X) ▴ (var x)
 test2 = typecheck [] id
 
+idNat = lam x :- NAT ▴ (var x)
 test3 = typecheck [] idNat
-
 test4 = typecheck ((y :- NAT) ∷ []) idNat
-
 test5 = typecheck ((y :- NAT) ∷ []) (idNat $ (var y))
 
 test6 = typecheck ((y :- NAT) ∷ []) (id [ NAT ] $ (var y))
 
+double = tlam X ▴ (lam f :- (TVAR X ⇒ TVAR X) ▴ (lam a :- TVAR X ▴ (var f $ (var f $ var a))))
+testDouble = typecheck [] double
+testDoubleNatArrowNat = typecheck [] (double [ NAT ⇒ NAT ])
+
+A = ALL X ▴ TVAR X ⇒ TVAR X
 testSelfApp = typecheck [] (lam x :- A ▴ (var x [ A ] $ var x))
-  where A = ALL X ▴ TVAR X ⇒ TVAR X
+
+tru = tlam X ▴ (lam x :- TVAR X ▴ (lam y :- TVAR X ▴ var x))
+testTru = typecheck [] tru
+
+CBool = ALL X ▴ TVAR X ⇒ TVAR X ⇒ TVAR X
+not = lam b :- CBool ▴ (tlam X ▴ (lam x :- TVAR X ▴ (lam y :- TVAR X ▴ (var b [ TVAR X ] $ var y $ var x))))
+testNot = typecheck [] not
+
+R = tv 0
+LIST : TVar → Type
+LIST X = ALL R ▴ (TVAR X ⇒ TVAR R ⇒ TVAR R) ⇒ TVAR R ⇒ TVAR R
+hd = v 1
+tl = v 2
+c = v 3
+n = v 4
+cons = tlam X ▴ (lam hd :- TVAR X ▴ (lam tl :- LIST X ▴ 
+       (tlam R ▴ (lam c :- TVAR X ⇒ TVAR R ⇒ TVAR R ▴ (lam n :- TVAR R ▴ (var c $ var hd $ (var tl [ TVAR R ] $ var c $ var n)))))
+       ))
+testCons = typecheck [] cons
